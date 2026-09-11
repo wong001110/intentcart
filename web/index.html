@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="IntentCart：對話優先、由你掌控的購物研究原型。">
+  <title>IntentCart — 把需要，準備剛好</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script type="module" src="/static/app.js"></script>
+</head>
+<body>
+  <div class="research-banner">研究原型 <span>／</span> 合成商品目錄 <span>／</span> 不涉及真實付款</div>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="IntentCart 首頁"><span class="brand-icon">i<span>↗</span></span>IntentCart<span class="brand-dot">.</span></a>
+    <nav aria-label="主要導覽">
+      <button class="nav-button active" data-view="chat">購物對話</button>
+      <button class="nav-button" data-view="browse">探索商品</button>
+    </nav>
+    <button id="cart-toggle" class="cart-toggle" aria-label="查看購物車">購物車 <span id="cart-count">0</span></button>
+  </header>
+  <main>
+    <section class="intro" id="intro">
+      <div class="intro-text"><p class="eyebrow"><span class="small-star">✳</span> LESS SEARCHING. MORE LIVING.</p>
+        <h1>把需要的，<br><span>準備剛好。</span></h1>
+        <p class="intro-copy">告訴我你的用途、預算和已有的東西。<br>我來準備購物車，最後由你決定。</p>
+        <div class="intro-tags"><span>從需求出發</span><span>保留你的選擇</span><span>不替你下單</span></div>
+      </div>
+      <div class="still-life" aria-hidden="true"><div class="still-label">YOUR LITTLE CREATOR CORNER</div><div id="hero-art"></div><span class="still-note">不一定買更多，<br>只買需要的。</span><span class="still-number">01 / DESK ESSENTIALS</span></div>
+    </section>
+    <div class="workspace-heading"><div><span class="eyebrow">YOUR SHOPPING SPACE</span><h2 id="workspace-title">一起準備你的下一個小計畫</h2></div><span id="driver-badge" class="mode-badge">載入中…</span></div>
+    <section id="chat-view" class="workspace" aria-label="購物工作區">
+      <section class="conversation panel" aria-label="與採購助手對話">
+        <header class="panel-header"><div><span class="agent-mark">✳</span><strong>你的採購助手</strong></div><span id="run-status" role="status">準備好聽你說</span></header>
+        <div id="messages" class="messages" aria-live="polite" aria-relevant="additions"></div>
+        <div id="quick-actions" class="quick-actions"></div>
+        <details class="trace-panel"><summary>查看實際工具操作 <span id="tool-count">0</span></summary><div id="tool-log" class="tool-log"></div></details>
+        <form id="chat-form" class="composer">
+          <label class="sr-only" for="message">描述你的購物需求</label>
+          <textarea id="message" rows="2" maxlength="2000" placeholder="例如：預算 RM300，幫我準備桌面拍片用的燈和麥克風…" required></textarea>
+          <div class="composer-bottom"><span>選擇可以改變，進度不必重來。</span><button id="send" class="send-button" type="submit" aria-label="送出需求">↑</button></div>
+        </form>
+        <p class="demo-note" id="demo-note"></p>
+      </section>
+      <aside id="cart-panel" class="cart-panel panel" aria-label="共享購物車">
+        <header class="panel-header"><div><span class="eyebrow">THE SAME CART, YOUR CHOICE</span><h3>正在為你準備</h3></div><span class="tiny-cart">⌑</span></header>
+        <div class="task-facts" id="task-facts"></div>
+        <button id="edit-constraints" class="text-button">調整需求與已知條件 ↗</button>
+        <div id="cart-items" class="cart-items"></div>
+        <div id="cart-summary" class="cart-summary"></div>
+        <div id="cart-issues" class="cart-issues"></div>
+        <button id="checkout" class="primary-button checkout-button" disabled>檢查並準備結帳 <span>→</span></button>
+        <p class="checkout-note">最後確認與模擬下單，只能由你完成。</p>
+      </aside>
+    </section>
+    <section id="browse-view" class="browse-view" hidden aria-label="自主瀏覽商品">
+      <div class="browse-top"><div><h2>挑你喜歡的，剩下交給助手。</h2><p id="browse-hint">直接加入的選擇會自動保留，不會被 agent 悄悄替換。</p></div><button id="return-chat" class="secondary-button">回到對話 ↗</button></div>
+      <div class="browse-controls"><div class="filter-tabs" id="kind-filters"><button data-kind="" class="active">全部</button><button data-kind="light">燈光</button><button data-kind="microphone">收音</button><button data-kind="stand">支架</button><button data-kind="accessory">配件</button></div><label class="search-field"><span>⌕</span><input id="catalog-search" type="search" placeholder="搜尋名稱或規格" maxlength="100" aria-label="搜尋商品"></label></div>
+      <div id="product-grid" class="product-grid"></div><p class="catalog-note">40 個合成商品規格 · 全部為 MYR 模擬價格 · 不代表真實商品或市場報價</p>
+    </section>
+    <section class="research-tools panel"><details><summary>研究工具 <span>查看證據與測試變化，不影響其他工作階段。</span></summary><div class="research-content"><p>這些操作會真的改變本工作階段的測試環境。離線示範不構成真實模型能力證據。</p><div class="research-actions"><button id="fault-stock" class="secondary-button">讓購物車第一件商品缺貨</button><button id="fault-timeout" class="secondary-button">下次 agent 寫入後中斷</button><button id="fault-fee" class="secondary-button">費用改為未知</button><button id="restore-fee" class="secondary-button">還原已知費用</button><button id="export" class="secondary-button">匯出本次研究紀錄 ↓</button></div><p id="experiment-status" role="status"></p></div></details></section>
+    <div id="receipt" class="receipt" hidden></div>
+  </main>
+  <footer><span class="brand-footer">IntentCart.</span><span>Tell it what you need. Make the final call.</span><span>RESEARCH PROTOTYPE / 2026</span></footer>
+  <div id="toast" class="toast" role="alert" hidden></div>
+  <dialog id="product-dialog"><div id="product-details"></div><button class="dialog-close" data-close="product-dialog" aria-label="關閉商品詳情">×</button></dialog>
+  <dialog id="constraints-dialog"><button class="dialog-close" data-close="constraints-dialog" aria-label="關閉需求設定">×</button><p class="eyebrow">YOU SET THE BOUNDARIES</p><h2>需求，由你說了算。</h2><form id="constraints-form">
+    <label>總預算（RM，留空表示未設定）<input id="budget-input" type="number" min="1" max="100000" step="0.01"></label>
+    <label>已確認的手機接口<select id="port-input"><option value="unknown">尚未確認</option><option value="usb-c">USB-C</option><option value="lightning">Lightning</option></select></label>
+    <fieldset><legend>需要準備</legend><div id="need-inputs" class="check-grid"></div></fieldset><fieldset><legend>已經擁有，不重複購買</legend><div id="owned-inputs" class="check-grid"></div></fieldset>
+    <label>顏色偏好（非硬性限制）<select id="color-input"><option value="any">沒有偏好</option><option value="ivory">米白</option><option value="sage">鼠尾草綠</option><option value="black">黑色</option></select></label>
+    <label class="checkbox-label"><input id="desk-input" type="checkbox">只找適合桌面使用的商品</label><button class="primary-button" type="submit">儲存條件</button>
+  </form></dialog>
+  <dialog id="checkout-dialog"><button class="dialog-close" data-close="checkout-dialog" aria-label="取消結帳">×</button><p class="eyebrow">THE FINAL CALL IS YOURS</p><h2>最後一步，由你確認。</h2><p>這是一筆模擬訂單，不會付款或配送。</p><div id="confirmation-summary"></div><button id="confirm-order" class="primary-button">確認模擬下單</button><p class="checkout-note">此確認綁定目前商品、數量與金額；購物車改變後必須重新確認。</p></dialog>
+</body>
+</html>
