@@ -1,70 +1,42 @@
 # AI-Native Development Practice
 
-## Authority and purpose
+## Authority
 
-IntentCart uses the owner's **AI-Native Development Practice** as its coding and delivery method. This is distinct from the runtime shopping agent under study.
+The owner authorized execution through the research MVP on 2026-09-11, superseding the documentation-only pause. Scope remains the product brief. Implementation is not automatic permission to merge, deploy, spend, access sensitive accounts or build the rest of a roadmap.
 
-**Current instruction: documentation only; do not start implementation.** See [PROJECT_STATE.md](../PROJECT_STATE.md). The rules below govern future authorized work, not permission to begin it.
+Use native planning, tools, delegation, tracing, verification and repository capabilities first. Add custom coordination only for a demonstrated gap. Keep project scope, status, decisions and evidence in a small set of normal documents, not a custom phase engine.
 
-## Native-first, with explicit boundaries
+Main Agent owns integration and proceed / repair / blocked decisions. Bounded sub-agents are optional; a completion message is not verification. Ordinary reversible choices within the assignment do not require repeated approval. Scope expansion, irreversible effects and externally consequential actions require actual authority.
 
-Use the coding environment's existing planning, tools, delegation, review, tracing, and repository capabilities first. Add custom orchestration only for a demonstrated gap. Do not recreate a harness, phase engine, or session-memory system just because the product contains an agent.
+## Phase loop and unchanged gates
 
-Maintain a small set of documents for scope, state, material decisions, and verification. Avoid exhaustive pre-written implementation instructions. Adapt implementation details to the actual environment and findings without silently changing product contracts.
+1. Define outcome, exclusions, affected contracts, risks and acceptance evidence before editing.
+2. Implement a coherent slice using native tools.
+3. Verify actual state changes, including negative and boundary cases.
+4. Perform independent verification. Label implementer self-review separately; it is not independent review or separate-model signoff.
+5. Evaluate proceed / repair / blocked. Only treat required gates as passed when their evidence exists. Unavailable required review stays open, not waived by relabeling.
+6. Publish coherent changes and update project state with actual delivery and limitations. Local changes, commits, PRs, merges and deployments are separate milestones.
 
-## Responsibilities
-
-The owner defines product direction, authorizes the working scope, and decides genuinely material changes. Main Agent owns integration, scope control, evidence review, and the decision to proceed, repair, or mark work blocked.
-
-Sub-agents are optional and receive bounded tasks with explicit inputs, boundaries, and expected evidence. A delegated agent's completion message does not establish correctness. Do not claim a separate reviewer or parallel verification ran when the environment did not provide one.
-
-After implementation is authorized, ordinary reversible choices inside that scope need not trigger repeated approval requests. Scope expansion, real spending or ordering, sensitive account access, destructive changes, publication outside the authorized repository work, and deployment beyond granted permission require owner involvement.
-
-## Phase loop
-
-For each authorized phase:
-
-1. Define the outcome, exclusions, affected contracts, risks, and acceptance evidence before editing.
-2. Implement a coherent slice using native tools; use bounded delegation where useful.
-3. Run the relevant checks and inspect real state changes, not only returned prose.
-4. Perform independent verification of the change, with negative and boundary cases. Label self-review separately; it is not independent review.
-5. Main Agent evaluates evidence and records **proceed**, **repair**, or **blocked**. Only proceed when required gates pass.
-6. Publish coherent changes and update project state with actual delivery and evidence. Implementation, verification, PR creation, merge, and deployment are distinct milestones.
-
-Suggested work states are `TODO -> IN_PROGRESS -> IMPLEMENTED -> VERIFYING -> VERIFIED`, with `BLOCKED` and `DEFERRED` as explicit alternatives. Unknown, missing, or stale evidence must not be represented as verified. If independent verification is required but unavailable, keep that gate open rather than relabeling self-review.
+Where an unavailable external verification leaves a gate open, report an implementation candidate, not a fully verified release. Independent executable work may be retained without misrepresenting blocked acceptance as a passed phase. The current report records all such open gates.
 
 ## Verification and mutation gate
 
-Write behavior tests from the contract, including the happy path, negative cases, boundaries, and invariants. Every explicit behavior rule should have at least one test demonstrated to kill a relevant mutation; coverage alone does not meet this requirement.
+Write behavioral tests from the contracts: happy paths, negative cases, boundaries and invariants. Every explicit behavior rule needs a test demonstrated to kill a relevant mutation; coverage alone is insufficient. Critical examples include budget removal, wrong variants, reversed lock checks, skipped writes, stale updates, blind retries and unauthorized order submission.
 
-For critical rules, plan mutations such as removing a budget guard, reversing a lock check, selecting a wrong variant, skipping a state write, accepting a stale update, retrying without reconciliation, or exposing order submission to the shopping agent. Actually run the applicable mutation tooling once implementation exists.
+Actually execute applicable mutation tooling. Surviving meaningful mutants require repair; equivalent/non-applicable cases need justification and review. Not-run work stays visible. The targeted runner is not a proof that every possible mutation or model behavior has been covered. Current live-model and independent-review gaps remain open.
 
-A meaningful surviving mutant is a gap to repair, not a green result. An equivalent or non-applicable mutant requires recorded justification and review rather than silent exclusion. Keep not-run mutation work visible. At this documentation-only stage there are no implemented rules, tests, mutation runner, or mutation results.
+Check UI events, API/tool results, saved state and visible outcomes together. Unit tests and mock provider responses do not prove live model behavior or a real browser/HTTP flow. A blocked browser is not permission to bypass managed browser policy.
 
-Verification should establish that UI events, agent tool calls, application state, and user-visible outcomes agree. A passing unit test alone does not prove an end-to-end shopping task or a real external integration.
+## Evidence
 
-## Evidence discipline
+Identify source revisions/hashes, environment, fixture/scenario version, provider settings, actual commands, tool effects, state before/after and limitations. Preserve failed agent/control runs. Separate deterministic commerce checks, mock protocol tests, offline DOM rendering, browser E2E and live-model evaluations.
 
-Record the tested commit, environment, fixture/scenario version, relevant model/provider settings, actual command or run identifier, tool events, state before/after, observed result, and limitations. Retain initial failures and subsequent repairs where they explain what changed.
+Do not persist credentials, sensitive transcripts or private chain-of-thought. Public project evidence uses synthetic inputs. Self-review, independent review and unperformed review remain distinct.
 
-Tests of deterministic commerce rules and evaluations of stochastic agent behavior are separate evidence. Preserve failed agent runs and report repeated-run outcomes, not a hand-picked demo. Claims are limited to the environment actually exercised.
+## Commits and repository boundary
 
-Do not store credentials or sensitive user data in logs. Observable tool actions, results, and concise user-facing explanations are sufficient; private chain-of-thought is not a required artifact.
+Commit coherent outcomes or phases, not each small edit. Deliver through a scoped PR with evidence; squash merge only after explicit authorization and required gates. Never force-rewrite shared history or infer deployment permission.
 
-## Commit and publication discipline
+The repository must build and test without Agent Continuity. Its optional environment-side SQLite, scope mappings, events, private checkpoints and helper runtime remain outside the entire checkout. Do not add a mandatory continuity manifest, package hook, CI job or bootstrap dependency. Product SQLite state is a separate application concern.
 
-Use coherent phase- or outcome-level commits, not a commit for every small edit. Future implementation should normally go through a scoped PR with the evidence needed for that change and a squash merge when merge is authorized. Do not bypass repository checks or infer deployment permission from a merge.
-
-Documentation-only initialization of an empty repository is a separate bootstrap activity. It does not start the implementation roadmap or imply product verification. Review and report documentation checks honestly as documentation checks.
-
-## Project state versus Agent Continuity
-
-Repository documentation owns product scope, architecture decisions, delivery phases, review rules, and project status. The repository must remain understandable without a particular coding environment's memory.
-
-Agent Continuity, if separately used for a bounded assignment, is optional environment-side assistance. Keep its SQLite database, leases, event ledger, session records, mappings, checkpoints, and helper runtime outside the checkout. Do not add continuity state directories, required runtime scripts, package hooks, CI jobs, or symlinks to this repository as a development prerequisite.
-
-The minimal root `AGENTS.md` only points to repository instructions; it does not require continuity infrastructure. Future application persistence for IntentCart's shopping tasks and cart is **product state**, not development-session continuity, and should be designed through normal implementation review.
-
-## Current stop condition
-
-Finish the documentation update and stop. Do not scaffold a project, choose and install a stack, run an implementation spike, add executable tests, configure CI, or deploy until the owner explicitly authorizes development.
+Maintain README, product brief, architecture, research plan and project state for facts contributors need. Do not copy a private coding-session ledger into product documentation.

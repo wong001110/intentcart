@@ -1,0 +1,49 @@
+{
+  "date": "2026-09-11",
+  "status": "MVP_CANDIDATE_NOT_FULLY_VERIFIED",
+  "unit_and_api_tests": {
+    "passed": 69,
+    "failed": 0,
+    "method": "pytest; includes explicitly mocked provider protocol tests"
+  },
+  "targeted_mutations": {
+    "killed": 25,
+    "total": 25,
+    "exhaustive": false
+  },
+  "control_evaluations": {
+    "demo": {
+      "passed": 57,
+      "total": 60,
+      "failed_scenarios": [
+        "S08 x3"
+      ]
+    },
+    "baseline": {
+      "passed": 54,
+      "total": 60,
+      "failed_scenarios": [
+        "S06 x3",
+        "S08 x3"
+      ]
+    },
+    "scenarios": 20,
+    "repeats": 3,
+    "real_llm_evidence": false
+  },
+  "real_model_evaluation": {
+    "status": "BLOCKED",
+    "runs": 0
+  },
+  "browser_http_integration": {
+    "status": "BLOCKED",
+    "reason": "ERR_BLOCKED_BY_ADMINISTRATOR"
+  },
+  "offline_dom_preview": {
+    "status": "RENDERED",
+    "live_api": false
+  },
+  "independent_review": "NOT_PERFORMED",
+  "deployment": "NOT_PERFORMED",
+  "merge": "NOT_AUTHORIZED"
+}
