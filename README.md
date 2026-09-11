@@ -2,80 +2,93 @@
 
 **Tell it what you need. Make the final call.**
 
-An agentic shopping research prototype that turns user intent into a validated cart through conversation and manual browsing, while leaving checkout to the user.
+A conversation-first shopping research prototype: an agent prepares a real, persisted cart in a **synthetic** catalog; the user browses, changes selections, and submits the final **simulated** order.
 
-> **Status: planning / documentation only.** Implementation has not started. There is no runnable application, deployed demo, or measured agent performance yet. The capabilities below describe the intended prototype, not delivered features. Development must wait for explicit owner authorization.
+> **Status: runnable MVP candidate, not a validated agent-performance claim.** The storefront, commerce service, model adapter, tool loop and evaluation runners are implemented. Automated domain/API/protocol checks ran. Real-model evaluation, networked browser E2E, and independent review remain open. See [project state](PROJECT_STATE.md) and [evidence](docs/EVIDENCE.md).
 
-## What this project investigates
+## What you can do
 
-Can an agent turn an incomplete, changing shopping request into a valid cart by choosing and using tools, responding to environmental feedback, and preserving the user's decisions?
+Describe a desk-recording goal in Traditional Chinese or English, give a budget, and identify equipment already owned. Browse 40 synthetic variants, inspect specifications without changing the cart, manually replace or lock a choice, revise constraints, and inspect actual tool actions. Fault controls can change stock, make fees unknown, or simulate a write that succeeded but timed out. Only the user can confirm the simulated order.
 
-IntentCart is a research portfolio project, not an attempt to compete with general-purpose shopping assistants or build a production marketplace. The initial environment will be an owned shopping website with a controlled product catalog and cart. Cross-commerce search and third-party checkout automation are outside the initial scope.
+Chat and manual controls share the same SQLite-backed product state. Versions reject stale writes; request IDs prevent duplicate effects; an uncertain write requires reconciliation. Locks, concrete variants, known compatibility, stock, dependencies and hard budgets are enforced outside the model prompt.
 
-The goal is to demonstrate **task completion, not just conversational recommendations**: actual product lookup, actual cart mutations, independently checkable constraints, and recovery when requirements or availability change.
+**This is not cross-merchant shopping, real payment, a deployed service, or proof that an LLM solves every task.** All prices are MYR fixtures inclusive of simulated fees. No product rating or merchant claim is real.
 
-## Intended experience
+## Run locally
 
-1. Describe a goal and constraints in natural language. The agent asks only for missing information that materially affects suitability.
-2. The agent searches, selects, checks, and prepares a cart without asking the user to approve every ordinary preparation step.
-3. Browse products directly at any time. Chat and manual actions update the same shopping state; explicit choices and locked items remain respected.
-4. Change the budget, replace an item, or encounter unavailable stock. The agent repairs affected parts rather than restarting the entire task.
-5. Review the prepared cart and submit the order yourself. The prototype will use clearly labeled simulated checkout; the shopping agent will not have order-submission or payment authority.
+Python **3.11+**. Tested in Python 3.13.5. No Node build step or cloud account is needed for offline mode.
 
-A useful outcome can also be buying less, using an item the user already owns, or explaining why no valid solution exists.
+```bash
+python -m venv .venv
+# macOS / Linux
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m uvicorn intentcart.api:create_app --factory --host 127.0.0.1 --port 8000
+```
 
-## A running example
+Open `http://127.0.0.1:8000`. The default **demo** driver is a transparent deterministic control, **not an LLM**. The mode is displayed in the UI, API, traces, and reports. Product state lives in `var/intentcart.sqlite`; use `INTENTCART_DB_PATH` for a different local file. Do not run multiple Uvicorn workers: this prototype's active-run ownership is process-local.
 
-> "I want to record talking-head videos at a small desk. I already have a phone and stand. Find lighting and audio equipment within RM300."
+Try:
+
+> 我需要桌面燈和麥克風，預算 RM300，已有支架。
 >
-> Later: "Keep the light. Reduce the total budget to RM250."
+> 我的手機是 USB-C。
+>
+> 保留燈，預算改成 RM180。
 
-The research challenge is to identify necessary compatibility questions, avoid buying another stand, select a valid combination, preserve the locked light, and adapt the remaining selection. A stock change or failed cart operation should trigger evidence-based recovery, not a scripted success message.
+The first request should prepare the safe portion and ask for the missing interface. Directly selected products are automatically protected; use the visible unlock control to release that choice.
 
-This is an illustrative scenario. The initial product category and catalog size are still proposals, not finalized implementation decisions.
+## Connect a real model
 
-## What must be demonstrated
+The live driver uses an OpenAI-compatible **Chat Completions tool-calling** endpoint. Select a model that supports that API shape. Provider/model compatibility and task quality must be tested; no default model performance is implied.
 
-| Capability | Observable evidence |
-| --- | --- |
-| Intent understanding | Hard constraints, preferences, owned items, and unresolved information are distinguished. |
-| Autonomous tool use | Searches and subsequent actions respond to returned data rather than a fixed dialogue script. |
-| Constraint handling | Cart validity is checked against concrete variants, quantities, budget, availability, and known compatibility rules. |
-| Shared state | Manual selections, locks, and chat-driven changes are reflected in one authoritative cart. |
-| Recovery and restraint | Failures and changes are handled without duplicate additions, silent constraint relaxation, or false completion claims. |
-| Human control | Only the user can perform final simulated order submission. |
+```bash
+export INTENTCART_DRIVER=live
+export INTENTCART_API_BASE=https://openrouter.ai/api/v1
+export INTENTCART_API_KEY=YOUR_PROVIDER_KEY
+export INTENTCART_MODEL=YOUR_TOOL_CAPABLE_MODEL_ID
+python -m uvicorn intentcart.api:create_app --factory --host 127.0.0.1 --port 8000
+```
 
-Synthetic products and simulated transactions are acceptable. Fake tool execution, fabricated stock, and unsupported claims of success are not.
+PowerShell equivalents use `$env:INTENTCART_DRIVER="live"`, etc. `.env.example` is a template; **the server does not auto-load `.env`**. Export variables in the launching shell. Keys stay server-side; never commit them. Live mode fails configuration rather than silently falling back to demo. Provider usage may incur charges.
 
-## Interface direction
+The model chooses searches, inspections, clarifications and cart proposals. It has no general network, browser, execution, checkout or payment tool. A host-generated summary reports the actual saved cart; model final prose is retained separately as unverified research output. `ask_user` preserves material model questions in the conversation.
 
-Conversation-first, not conversation-only. Start with a simple conversation surface, contextual product cards, and an expandable cart. Let users browse, replace, remove, and lock products directly.
+## Verify and evaluate
 
-Show one primary recommendation by default; alternatives and comparisons appear when useful. Prefer a small set of stable, typed UI components over arbitrary generated frontend code. Earlier concept boards are exploratory illustrations, not a requirement for a permanent three-column dashboard, cross-platform shopping, or a finalized visual design.
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+python scripts/mutate.py
+python -m playwright install chromium
+python scripts/browser_test.py
+python scripts/evaluate.py --driver demo --output artifacts/evaluation-demo.json
+python scripts/evaluate.py --driver baseline --output artifacts/evaluation-baseline.json
+# Explicitly opt into potentially billable model calls:
+python scripts/evaluate.py --driver live --allow-live --output artifacts/evaluation-live.json
+```
 
-## Development approach
+`CHROMIUM_PATH` may point to an existing browser. The browser runner starts and stops a temporary loopback server and DB. It exits **2** when the environment blocks verification, **1** on test failure, and **0** only on success. Do not disable managed browser policies to make it pass.
 
-IntentCart will use **AI-Native Development Practice**:
+The evaluation suite has 20 cases, three repeats by default, and declared development/held-out splits. Every result, including failures, records tool effects and state. Deterministic repetitions validate the machinery; they do not measure stochastic model reliability. The split is not a completed blind holdout experiment.
 
-- Native-first tooling, with custom coordination added only for demonstrated gaps.
-- A Main Agent owns scope, integration, verification decisions, and phase progression; bounded sub-agent work is optional.
-- Phase-by-phase implementation, review, behavioral verification, and mutation-sensitive tests before progressing.
-- Small, maintained project documentation and commit-linked evidence, rather than an elaborate custom development harness.
+## Boundaries and known limitations
 
-This is the coding and delivery method. It is distinct from the runtime shopping agent being studied. Agent Continuity is optional environment-side assistance, not a repository dependency or the project's development method.
+Hard facts are extracted with a small, inspectable bilingual grammar, not unlimited language understanding. Unsupported paraphrases, quantities, device-name inference and complex hardware compatibility need clarification or explicit controls. Owned items are category-level; there is no long-term user profile. Deterministic controls cannot repair every accessory dependency. The live agent's ability to do better is **not yet measured**.
 
-**A roadmap is not permission to execute it.** The current assignment is documentation only.
+This is loopback-first research software, not an Internet-hardened multi-user shop. There is no production identity system, global rate limiting, distributed run ownership, payment gateway, merchant integration, or deployment. A browser session has an HttpOnly cookie and CSRF checks, but clearing cookies loses access to that anonymous session. SQLite persists state, not a resumable in-flight model process.
 
-## Project documents
+## Development
+
+**AI-Native Development Practice**: native-first tools, bounded phases, coherent commits, behavioral/mutation evidence and explicit review gates. The owner's current authorization covers implementation through the MVP, not automatic merge or deployment. Agent Continuity may track the coding assignment **outside the checkout**; it is not a product dependency.
 
 | Document | Purpose |
 | --- | --- |
-| [Project state](PROJECT_STATE.md) | Current authorization, delivered state, proposed phases, and unresolved decisions. |
-| [Product brief](docs/PRODUCT_BRIEF.md) | Scope, user experience, behavioral requirements, and system boundaries. |
-| [Research plan](docs/RESEARCH_PLAN.md) | Planned scenarios, state-based evaluation, comparison design, and evidence limits. |
-| [Development practice](docs/DEVELOPMENT.md) | Native-first delivery, phase gates, verification, mutation testing, and commit discipline. |
-| [Agent entrypoint](AGENTS.md) | Minimal instructions for future coding agents. |
-
-## Not decided or implemented yet
-
-The technology stack, model/provider, product fixtures, persistence implementation, test tooling, visual system, and deployment target remain undecided. No setup commands or performance claims are provided because the application and experiments do not exist yet.
+| [Project state](PROJECT_STATE.md) | Actual implementation and verification status |
+| [Product brief](docs/PRODUCT_BRIEF.md) | Behavioral contracts and exclusions |
+| [Architecture](docs/ARCHITECTURE.md) | State, tools, trust boundaries and stack decisions |
+| [Research plan](docs/RESEARCH_PLAN.md) | Scenarios, controls, oracle and claim limits |
+| [Evidence](docs/EVIDENCE.md) | Executed results, failures and unverified gates |
+| [Development](docs/DEVELOPMENT.md) | Phase, mutation and review policy |
+| [Agent entrypoint](AGENTS.md) | Minimal contributor instructions |
