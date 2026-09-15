@@ -5,56 +5,58 @@
   <meta name="description" content="IntentCart：對話優先、由你掌控的購物研究原型。">
   <title>IntentCart — 把需要，準備剛好</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/recommendations.css">
   <script type="module" src="/static/app.js"></script>
 </head>
 <body>
-  <div class="research-banner">研究原型 <span>／</span> 合成商品目錄 <span>／</span> 不涉及真實付款</div>
+  <div id="research-banner" class="research-banner">研究原型 <span>／</span> 合成商品目錄 <span>／</span> 不涉及真實付款</div>
   <header class="site-header">
-    <a class="brand" href="/" aria-label="IntentCart 首頁"><span class="brand-icon">i<span>↗</span></span>IntentCart<span class="brand-dot">.</span></a>
-    <nav aria-label="主要導覽">
-      <button class="nav-button active" data-view="chat">購物對話</button>
-      <button class="nav-button" data-view="browse">探索商品</button>
+    <a class="brand" href="/" aria-label="IntentCart 首頁" data-i18n-aria="homeAria"><span class="brand-icon">i<span>↗</span></span>IntentCart<span class="brand-dot">.</span></a>
+    <nav aria-label="主要導覽" data-i18n-aria="navigationAria">
+      <button id="nav-chat" class="nav-button active" data-view="chat">購物對話</button>
+      <button id="nav-browse" class="nav-button" data-view="browse">探索商品</button>
     </nav>
-    <button id="cart-toggle" class="cart-toggle" aria-label="查看購物車">購物車 <span id="cart-count">0</span></button>
+    <div class="header-actions"><button id="language-toggle" class="header-button" type="button">EN</button><button id="new-session" class="header-button" type="button">新對話</button><button id="cart-toggle" class="cart-toggle" aria-label="查看購物車">購物車 <span id="cart-count">0</span></button></div>
   </header>
   <main>
     <section class="intro" id="intro">
-      <div class="intro-text"><p class="eyebrow"><span class="small-star">✳</span> LESS SEARCHING. MORE LIVING.</p>
-        <h1>把需要的，<br><span>準備剛好。</span></h1>
-        <p class="intro-copy">告訴我你的用途、預算和已有的東西。<br>我來準備購物車，最後由你決定。</p>
-        <div class="intro-tags"><span>從需求出發</span><span>保留你的選擇</span><span>不替你下單</span></div>
+      <div class="intro-text"><p id="intro-eyebrow" class="eyebrow"><span class="small-star">✳</span> LESS SEARCHING. MORE LIVING.</p>
+        <h1 id="intro-title">把需要的，<br><span>準備剛好。</span></h1>
+        <p id="intro-copy" class="intro-copy">告訴我你的用途、預算和已有的東西。<br>我來準備購物車，最後由你決定。</p>
+        <div id="intro-tags" class="intro-tags"><span>從需求出發</span><span>保留你的選擇</span><span>不替你下單</span></div>
       </div>
-      <div class="still-life" aria-hidden="true"><div class="still-label">YOUR LITTLE CREATOR CORNER</div><div id="hero-art"></div><span class="still-note">不一定買更多，<br>只買需要的。</span><span class="still-number">01 / DESK ESSENTIALS</span></div>
+      <div class="still-life" aria-hidden="true"><div id="still-label" class="still-label">YOUR LITTLE CREATOR CORNER</div><div id="hero-art"></div><span id="still-note" class="still-note">不一定買更多，<br>只買需要的。</span><span id="still-number" class="still-number">01 / DESK ESSENTIALS</span></div>
     </section>
-    <div class="workspace-heading"><div><span class="eyebrow">YOUR SHOPPING SPACE</span><h2 id="workspace-title">一起準備你的下一個小計畫</h2></div><span id="driver-badge" class="mode-badge">載入中…</span></div>
-    <section id="chat-view" class="workspace" aria-label="購物工作區">
-      <section class="conversation panel" aria-label="與採購助手對話">
-        <header class="panel-header"><div><span class="agent-mark">✳</span><strong>你的採購助手</strong></div><span id="run-status" role="status">準備好聽你說</span></header>
+    <div class="workspace-heading"><div><span id="workspace-eyebrow" class="eyebrow">YOUR SHOPPING SPACE</span><h2 id="workspace-title">一起準備你的下一個小計畫</h2></div><span id="driver-badge" class="mode-badge">載入中…</span></div>
+    <section id="chat-view" class="workspace" aria-label="購物工作區" data-i18n-aria="workspaceAria">
+      <section class="conversation panel" aria-label="與採購助手對話" data-i18n-aria="conversationAria">
+        <header class="panel-header"><div><span class="agent-mark">✳</span><strong id="agent-title">你的採購助手</strong></div><span id="run-status" role="status">準備好聽你說</span></header>
         <div id="messages" class="messages" aria-live="polite" aria-relevant="additions"></div>
         <div id="quick-actions" class="quick-actions"></div>
-        <details class="trace-panel"><summary>查看實際工具操作 <span id="tool-count">0</span></summary><div id="tool-log" class="tool-log"></div></details>
+        <details class="trace-panel"><summary><span id="trace-label">查看實際工具操作</span> <span id="tool-count">0</span></summary><div id="tool-log" class="tool-log"></div></details>
+        <details id="conversation-memory" class="trace-panel memory-panel" hidden><summary><span id="memory-label">早期對話記憶</span></summary><p id="memory-warning"></p><pre id="memory-body"></pre></details>
         <form id="chat-form" class="composer">
-          <label class="sr-only" for="message">描述你的購物需求</label>
+          <label id="message-label" class="sr-only" for="message">描述你的購物需求</label>
           <textarea id="message" rows="2" maxlength="2000" placeholder="例如：預算 RM300，幫我準備桌面拍片用的燈和麥克風…" required></textarea>
-          <div class="composer-bottom"><span>選擇可以改變，進度不必重來。</span><button id="send" class="send-button" type="submit" aria-label="送出需求">↑</button></div>
+          <div class="composer-bottom"><span id="composer-hint">選擇可以改變，進度不必重來。</span><button id="send" class="send-button" type="submit" aria-label="送出需求" data-i18n-aria="sendAria">↑</button></div>
         </form>
         <p class="demo-note" id="demo-note"></p>
       </section>
-      <aside id="cart-panel" class="cart-panel panel" aria-label="共享購物車">
-        <header class="panel-header"><div><span class="eyebrow">THE SAME CART, YOUR CHOICE</span><h3>正在為你準備</h3></div><span class="tiny-cart">⌑</span></header>
+      <aside id="cart-panel" class="cart-panel panel" aria-label="共享購物車" data-i18n-aria="cartAria">
+        <header class="panel-header"><div><span id="cart-eyebrow" class="eyebrow">THE SAME CART, YOUR CHOICE</span><h3 id="cart-title">正在為你準備</h3></div><span class="tiny-cart">⌑</span></header>
         <div class="task-facts" id="task-facts"></div>
         <button id="edit-constraints" class="text-button">調整需求與已知條件 ↗</button>
         <div id="cart-items" class="cart-items"></div>
         <div id="cart-summary" class="cart-summary"></div>
         <div id="cart-issues" class="cart-issues"></div>
-        <button id="checkout" class="primary-button checkout-button" disabled>檢查並準備結帳 <span>→</span></button>
-        <p class="checkout-note">最後確認與模擬下單，只能由你完成。</p>
+        <button id="checkout" class="primary-button checkout-button" disabled><span id="checkout-label">檢查並準備結帳</span> <span>→</span></button>
+        <p id="checkout-note" class="checkout-note">最後確認與模擬下單，只能由你完成。</p>
       </aside>
     </section>
-    <section id="browse-view" class="browse-view" hidden aria-label="自主瀏覽商品">
-      <div class="browse-top"><div><h2>挑你喜歡的，剩下交給助手。</h2><p id="browse-hint">直接加入的選擇會自動保留，不會被 agent 悄悄替換。</p></div><button id="return-chat" class="secondary-button">回到對話 ↗</button></div>
+    <section id="browse-view" class="browse-view" hidden aria-label="自主瀏覽商品" data-i18n-aria="browseAria">
+      <div class="browse-top"><div><h2 id="browse-title">挑你喜歡的，剩下交給助手。</h2><p id="browse-hint">直接加入的選擇會自動保留，不會被 agent 悄悄替換。</p></div><button id="return-chat" class="secondary-button">回到對話 ↗</button></div>
       <div class="browse-controls"><div class="filter-tabs" id="kind-filters"><button data-kind="" class="active">全部</button><button data-kind="light">燈光</button><button data-kind="microphone">收音</button><button data-kind="stand">支架</button><button data-kind="accessory">配件</button></div><label class="search-field"><span>⌕</span><input id="catalog-search" type="search" placeholder="搜尋名稱或規格" maxlength="100" aria-label="搜尋商品"></label></div>
-      <div id="product-grid" class="product-grid"></div><p class="catalog-note">40 個合成商品規格 · 全部為 MYR 模擬價格 · 不代表真實商品或市場報價</p>
+      <div id="product-grid" class="product-grid"></div><p id="catalog-note" class="catalog-note">40 個合成商品規格 · 全部為 MYR 模擬價格 · 不代表真實商品或市場報價</p>
     </section>
     <section class="research-tools panel"><details><summary>研究工具 <span>查看證據與測試變化，不影響其他工作階段。</span></summary><div class="research-content"><p>這些操作會真的改變本工作階段的測試環境。離線示範不構成真實模型能力證據。</p><div class="research-actions"><button id="fault-stock" class="secondary-button">讓購物車第一件商品缺貨</button><button id="fault-timeout" class="secondary-button">下次 agent 寫入後中斷</button><button id="fault-fee" class="secondary-button">費用改為未知</button><button id="restore-fee" class="secondary-button">還原已知費用</button><button id="export" class="secondary-button">匯出本次研究紀錄 ↓</button></div><p id="experiment-status" role="status"></p></div></details></section>
     <div id="receipt" class="receipt" hidden></div>

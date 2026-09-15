@@ -8,13 +8,14 @@ PRODUCTS = []
 
 
 def add(family, name, zh, kind, price, *, colors=('ivory', 'sage'), ports=('any',),
-        stock=8, requires=(), desk=True, note=''):
+        connector_ports=(), stock=8, requires=(), desk=True, note=''):
     for color in colors:
         for port in ports:
             PRODUCTS.append(dict(
                 id=f'{family}-{color}' + (f'-{port}' if port != 'any' else ''),
                 family_id=family, name=name, name_zh=zh, kind=kind, color=color,
-                port=port, price_cents=price, stock=stock, requires=list(requires),
+                port=port, connector_ports=list(connector_ports or (() if port == 'any' else (port,))),
+                price_cents=price, stock=stock, requires=list(requires),
                 desk_fit=desk, description=note or f'Synthetic {kind} for a desk recording setup.',
                 fee_scope='All simulated fees included', synthetic=True,
             ))
@@ -43,7 +44,7 @@ add('fold', 'Fold travel stand', 'Fold 摺疊支架', 'stand', 2900)
 add('arm', 'Desk mounting arm', '桌面懸臂支架', 'stand', 7900)
 add('mini', 'Mini tripod', 'Mini 桌面腳架', 'stand', 3900)
 add('power', 'Power adapter', '電源轉接器', 'accessory', 2500, colors=('ivory',))
-add('cable', 'USB-C cable', 'USB-C 連接線', 'accessory', 1900, colors=('black',))
+add('cable', 'USB-C cable', 'USB-C 連接線', 'accessory', 1900, colors=('black',), connector_ports=('usb-c',))
 add('wind', 'Microphone windshield', '麥克風防風罩', 'accessory', 1500, colors=('black',))
 add('case', 'Storage pouch', '收納袋', 'accessory', 2200, colors=('sage',))
 BY_ID = {p['id']: p for p in PRODUCTS}

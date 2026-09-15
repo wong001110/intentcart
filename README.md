@@ -44,16 +44,21 @@ The first request should prepare the safe portion and ask for the missing interf
 The live driver uses an OpenAI-compatible **Chat Completions tool-calling** endpoint. Select a model that supports that API shape. Provider/model compatibility and task quality must be tested; no default model performance is implied.
 
 ```bash
-export INTENTCART_DRIVER=live
-export INTENTCART_API_BASE=https://openrouter.ai/api/v1
+# Copy .env.example to .env, then set these values in .env:
+INTENTCART_DRIVER=live
+INTENTCART_API_BASE=https://api.deepseek.com
 export INTENTCART_API_KEY=YOUR_PROVIDER_KEY
-export INTENTCART_MODEL=YOUR_TOOL_CAPABLE_MODEL_ID
+INTENTCART_MODEL=deepseek-v4-flash
+INTENTCART_MAX_ROUNDS=6
+INTENTCART_MAX_TOOLS=12
 python -m uvicorn intentcart.api:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
-PowerShell equivalents use `$env:INTENTCART_DRIVER="live"`, etc. `.env.example` is a template; **the server does not auto-load `.env`**. Export variables in the launching shell. Keys stay server-side; never commit them. Live mode fails configuration rather than silently falling back to demo. Provider usage may incur charges.
+Copy `.env.example` to `.env`; the local server accepts only the documented `INTENTCART_DRIVER`, `INTENTCART_API_BASE`, `INTENTCART_API_KEY`, `INTENTCART_MODEL`, `INTENTCART_MAX_ROUNDS`, `INTENTCART_MAX_TOOLS`, and `INTENTCART_DB_PATH` keys from that file. Live defaults are six model rounds and 12 tool calls; use the two limits to trade completeness for speed and cost. `.env` is ignored by Git, and explicitly set system environment variables take precedence, which keeps CI and temporary provider overrides possible. Keys stay server-side; never commit them. Live mode fails configuration rather than silently falling back to demo. Provider usage may incur charges.
 
 The model chooses searches, inspections, clarifications and cart proposals. It has no general network, browser, execution, checkout or payment tool. A host-generated summary reports the actual saved cart; model final prose is retained separately as unverified research output. `ask_user` preserves material model questions in the conversation.
+
+For a longer live conversation, the server sends the model the eight newest saved messages plus a compact, host-derived reference to older **user** messages. It never stores model reasoning or tool payloads in that memory. The reference is visibly labelled in the chat, supplied as untrusted user data, and cannot override the current request or the saved cart, budget, permissions, and compatibility facts. This keeps context bounded without adding a separate summarization-model call or provider cost.
 
 ## Verify and evaluate
 
@@ -75,7 +80,7 @@ The evaluation suite has 20 cases, three repeats by default, and declared develo
 
 ## Boundaries and known limitations
 
-Hard facts are extracted with a small, inspectable bilingual grammar, not unlimited language understanding. Unsupported paraphrases, quantities, device-name inference and complex hardware compatibility need clarification or explicit controls. Owned items are category-level; there is no long-term user profile. Deterministic controls cannot repair every accessory dependency. The live agent's ability to do better is **not yet measured**.
+Hard facts are extracted with a small, inspectable bilingual grammar, not unlimited language understanding. Unsupported paraphrases, quantities, device-name inference and complex hardware compatibility need clarification or explicit controls. Owned items are category-level; there is no long-term user profile. The bounded conversation reference is session-scoped context, not a profile, and is cleared with the chat. Deterministic controls cannot repair every accessory dependency. The live agent's ability to do better is **not yet measured**.
 
 This is loopback-first research software, not an Internet-hardened multi-user shop. There is no production identity system, global rate limiting, distributed run ownership, payment gateway, merchant integration, or deployment. A browser session has an HttpOnly cookie and CSRF checks, but clearing cookies loses access to that anonymous session. SQLite persists state, not a resumable in-flight model process.
 

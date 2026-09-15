@@ -20,6 +20,7 @@ from .store import Store
 class Chat(StrictModel):
     message: str = Field(min_length=1, max_length=2000)
     request_id: str = Field(min_length=8, max_length=100, pattern=r'^[A-Za-z0-9_-]+$')
+    language: Literal['zh', 'en'] = 'zh'
 
 
 class ConstraintUpdate(StrictModel):
@@ -88,7 +89,8 @@ def create_app(db_path=None, config=None, provider=None):
             csrf = store.session(sid)['csrf']
         except Problem:
             sid, csrf = store.create_session()
-        response = JSONResponse(dict(state=store.state(sid), csrf=csrf, messages=store.messages(sid),
+        memory, _ = store.context_window(sid, recent_limit=8)
+        response = JSONResponse(dict(state=store.state(sid), csrf=csrf, messages=store.messages(sid), memory=memory,
                                      config=config.public(), orders=store.orders(sid)))
         response.set_cookie('intentcart_session', sid, httponly=True, samesite='strict',
                             secure=request.url.scheme == 'https', max_age=604800)
@@ -120,6 +122,18 @@ def create_app(db_path=None, config=None, provider=None):
     def constraints(body: ConstraintUpdate, request: Request):
         return store.constraints(authorize(request), body.constraints, body.expected_version, body.request_id)
 
+    @app.post('/api/session/reset')
+    def reset_session(request: Request):
+        sid = authorize(request)
+        if sid in running:
+            raise Problem('RUN_IN_PROGRESS', '請等目前採購準備結束，再開始新的對話。')
+        new_sid, new_csrf = store.create_session()
+        response = JSONResponse(dict(state=store.state(new_sid), csrf=new_csrf, messages=[], memory=None,
+                                     config=config.public(), orders=[]))
+        response.set_cookie('intentcart_session', new_sid, httponly=True, samesite='strict',
+                            secure=request.url.scheme == 'https', max_age=604800)
+        return response
+
     @app.post('/api/chat')
     async def chat(body: Chat, request: Request):
         sid = authorize(request)
@@ -131,7 +145,7 @@ def create_app(db_path=None, config=None, provider=None):
         running.add(sid)
 
         async def stream():
-            generator = run_turn(store, sid, run_id, config, provider=provider)
+            generator = run_turn(store, sid, run_id, config, provider=provider, language=body.language)
             try:
                 async for event in generator:
                     yield json.dumps(event, ensure_ascii=False) + '\n'
@@ -164,7 +178,8 @@ def create_app(db_path=None, config=None, provider=None):
     @app.get('/api/export')
     def export(request: Request):
         sid = identify(request)
-        return dict(fixture=FIXTURE_VERSION, config=config.public(), state=store.state(sid),
+        memory, _ = store.context_window(sid, recent_limit=8)
+        return dict(fixture=FIXTURE_VERSION, config=config.public(), state=store.state(sid), memory=memory,
                     messages=store.messages(sid), trace=store.trace(sid), orders=store.orders(sid))
 
     app.mount('/static', StaticFiles(directory=web), name='static')
