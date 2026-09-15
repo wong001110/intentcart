@@ -31,6 +31,7 @@ class Store:
             CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT, sid TEXT, run_id TEXT, kind TEXT, payload TEXT, utc REAL);
             CREATE TABLE IF NOT EXISTS confirmations(token TEXT PRIMARY KEY, sid TEXT, version INTEGER, expires REAL);
             CREATE TABLE IF NOT EXISTS orders(id TEXT PRIMARY KEY, sid TEXT, snapshot TEXT, utc REAL);
+            CREATE TABLE IF NOT EXISTS conversation_memory(sid TEXT PRIMARY KEY, payload TEXT NOT NULL, updated REAL NOT NULL);
             PRAGMA user_version=1;
             ''')
 
@@ -88,6 +89,64 @@ class Store:
     def messages(self, sid):
         with self.connection() as c:
             return [dict(r) for r in c.execute('SELECT role,text FROM messages WHERE sid=? ORDER BY id', (sid,))]
+
+    def _memory_topics(self, rows):
+        """Return only host-derived labels; never replay free-form historic text to the model."""
+        text = ' '.join(row['text'].casefold() for row in rows if row['role'] == 'user')
+        topics = []
+        for label, markers in (
+            ('recording', ('拍', '錄', 'recording', 'video', 'film')),
+            ('recommendation', ('推薦', 'recommend')),
+            ('price_comparison', ('價格', '价', 'price', 'cost', '總共', 'total')),
+            ('catalog_browsing', ('瀏覽', '浏览', 'browse', 'catalog', '商品')),
+        ):
+            if any(marker in text for marker in markers):
+                topics.append(label)
+        return topics
+
+    def _historical_user_notes(self, rows):
+        """Keep a tiny bounded reference to user intent, never assistant/model prose."""
+        notes = [(row['id'], ' '.join(row['text'].split())) for row in rows if row['role'] == 'user']
+        if len(notes) > 4:
+            notes = [notes[0], *notes[-3:]]
+        return [dict(message_id=message_id, text=text[:240]) for message_id, text in notes if text]
+
+    def refresh_memory(self, sid, recent_limit=8):
+        """Persist a small, non-authoritative digest for messages outside the model window."""
+        with self.connection(True) as c:
+            rows = list(c.execute('SELECT id,role,text FROM messages WHERE sid=? ORDER BY id', (sid,)))
+            if len(rows) <= recent_limit:
+                c.execute('DELETE FROM conversation_memory WHERE sid=?', (sid,))
+                return None
+            older = rows[:-recent_limit]
+            state, version = self._load(c, sid)
+            memory = dict(
+                source='host-derived-with-user-excerpts', non_authoritative=True,
+                covered_messages=len(older), covered_through_id=older[-1]['id'],
+                recent_messages=recent_limit,
+                prior_user_messages=sum(row['role'] == 'user' for row in older),
+                topics=self._memory_topics(older),
+                historical_user_notes=self._historical_user_notes(older),
+                verified_facts=dict(
+                    version=version,
+                    constraints=state['constraints'],
+                    locked_variants=sorted(pid for pid, item in state['cart'].items() if item['locked']),
+                    excluded_variants=sorted(state['excluded']),
+                ),
+            )
+            c.execute('INSERT INTO conversation_memory(sid,payload,updated) VALUES(?,?,?) '
+                      'ON CONFLICT(sid) DO UPDATE SET payload=excluded.payload,updated=excluded.updated',
+                      (sid, encoded(memory), time.time()))
+            return memory
+
+    def context_window(self, sid, recent_limit=8):
+        """Return the bounded model window plus non-authoritative, host-derived memory."""
+        memory = self.refresh_memory(sid, recent_limit)
+        with self.connection() as c:
+            rows = [dict(row) for row in c.execute(
+                'SELECT role,text FROM messages WHERE sid=? ORDER BY id DESC LIMIT ?', (sid, recent_limit))]
+        rows.reverse()
+        return memory, rows
 
     def begin_run(self, sid, text, request_id, driver):
         run_id = secrets.token_hex(12)

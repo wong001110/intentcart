@@ -13,8 +13,8 @@ def client(tmp_path):
         yield c
 
 
-def run(c, text='需要燈和麥克風，預算 RM300，USB-C。', request_id='request-for-chat'):
-    response=c.post('/api/chat',json={'message':text,'request_id':request_id})
+def run(c, text='需要燈和麥克風，預算 RM300，USB-C。', request_id='request-for-chat', language='zh'):
+    response=c.post('/api/chat',json={'message':text,'request_id':request_id,'language':language})
     assert response.status_code==200,response.text
     return [json.loads(line) for line in response.text.splitlines()]
 
@@ -27,6 +27,13 @@ def test_bootstrap_no_secret_state_leak(client):
     assert response.headers['cache-control']=='no-store'
     assert 'csrf' not in response.json()['state']
     assert 'api_key' not in json.dumps(response.json()['config'])
+    assert response.json()['memory'] is None
+
+
+def test_english_chat_request_returns_english_host_summary(client):
+    events = run(client, 'I need a desk light and microphone. My budget is RM300 and my phone uses USB-C.', 'english-request', 'en')
+    assert events[0]['message'] == 'Checking your request and saved cart…'
+    assert 'Your cart is ready:' in events[-1]['message']
 
 
 def test_csrf_and_cross_origin_rejected(client):
@@ -57,6 +64,29 @@ def test_duplicate_chat_not_rerun(client):
     response=client.post('/api/chat',json={'message':'same','request_id':'request-for-chat'})
     assert response.status_code==409
     assert response.json()['error']['code']=='DUPLICATE_RUN'
+
+
+def test_reset_starts_a_fresh_session_without_erasing_prior_evidence(client):
+    run(client)
+    old_sid=client.cookies.get('intentcart_session')
+    response=client.post('/api/session/reset',json={})
+    assert response.status_code==200
+    fresh=response.json()
+    assert fresh['state']['cart']=={}
+    assert fresh['messages']==[]
+    assert fresh['memory'] is None
+    assert fresh['orders']==[]
+    assert client.cookies.get('intentcart_session') != old_sid
+    assert client.app.state.store.messages(old_sid)
+
+
+def test_reset_rejects_an_active_agent_run(client):
+    sid=client.cookies.get('intentcart_session')
+    client.app.state.running.add(sid)
+    response=client.post('/api/session/reset',json={})
+    assert response.status_code==409
+    assert response.json()['error']['code']=='RUN_IN_PROGRESS'
+    client.app.state.running.remove(sid)
 
 
 def test_catalog_view_never_adds(client):
@@ -99,9 +129,18 @@ def test_serves_own_scripts_and_csp(client):
     response=client.get('/')
     assert response.status_code==200
     assert 'IntentCart' in response.text
+    assert 'recommendations.css' in response.text
+    assert 'conversation-memory' in response.text
     assert "script-src 'self'" in response.headers['content-security-policy']
-    assert client.get('/static/app.js').status_code==200
+    app_script=client.get('/static/app.js')
+    assert app_script.status_code==200
+    assert 'recommendationStarts' in app_script.text
+    assert 'renderMemory' in app_script.text
+    assert "$('memory-body').textContent" in app_script.text
+    assert 'request_id:uid(),language' in app_script.text
+    assert 'Respond only in English' not in app_script.text
     assert client.get('/static/style.css').status_code==200
+    assert client.get('/static/recommendations.css').status_code==200
 
 
 def test_checkout_cannot_race_an_active_agent_run(client):

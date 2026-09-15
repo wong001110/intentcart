@@ -159,8 +159,8 @@ def extract_facts(text):
     The UI exposes editable facts. Unsupported paraphrases remain a research limit.
     """
     patch = {}
-    # A hard-cap update must be attached to a budget expression, not an arbitrary product price.
-    amounts = re.findall(r'(?:預算|预算|budget|within|under|最多|不超過|不超过)\s*(?:改成|改為|改为|to|is|of|:|：)?\s*(?:RM|MYR)?\s*(\d+(?:\.\d{1,2})?)', text, re.I)
+    # A hard-cap update must name the user's budget, not merely describe a product price.
+    amounts = re.findall(r'(?:預算|预算|最多|不超過|不超过|(?:my\s+)?budget)\s*(?:改成|改為|改为|to|is|of|:|：)?\s*(?:RM|MYR)?\s*(\d+(?:\.\d{1,2})?)', text, re.I)
     if amounts:
         value = int(Decimal(amounts[-1]) * 100)
         if 100 <= value <= 10000000:

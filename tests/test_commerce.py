@@ -251,7 +251,7 @@ def test_empty_cart_not_ready(shop):
         shop[0].preview_checkout(shop[1])
 
 
-@pytest.mark.parametrize('text,amount', [('預算 RM300', 30000), ('預算改成 RM250', 25000), ('Budget to RM250.50', 25050), ('A product costs RM200', None)])
+@pytest.mark.parametrize('text,amount', [('預算 RM300', 30000), ('預算改成 RM250', 25000), ('Budget to RM250.50', 25050), ('A product costs RM200', None), ('This stand works under RM200', None)])
 def test_explicit_budget_parser(text, amount):
     assert extract_facts(text).get('budget_cents') == amount
 

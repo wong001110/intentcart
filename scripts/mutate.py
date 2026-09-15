@@ -45,7 +45,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', default='artifacts/mutations.json')
     args = parser.parse_args()
-    baseline = subprocess.run([sys.executable, '-m', 'pytest', '-q', 'tests'], cwd=ROOT, env=TEST_ENV, capture_output=True, text=True)
+    baseline = subprocess.run([sys.executable, '-m', 'pytest', '-q', 'tests', '--basetemp', '.pytest-mutation-baseline'], cwd=ROOT, env=TEST_ENV, capture_output=True, text=True)
     if baseline.returncode:
         print(baseline.stdout, baseline.stderr)
         raise SystemExit('Baseline failed; mutation results would be meaningless.')
@@ -63,7 +63,7 @@ def main():
             changed = source.replace(before, after, 1)
             compile(changed, str(file), 'exec')
             file.write_text(changed)
-            run = subprocess.run([sys.executable, '-m', 'pytest', '-q', (f'tests/{target}' if '::' in target else f'tests/test_commerce.py::{target}')], cwd=scratch, env=TEST_ENV, capture_output=True, text=True, timeout=25)
+            run = subprocess.run([sys.executable, '-m', 'pytest', '-q', (f'tests/{target}' if '::' in target else f'tests/test_commerce.py::{target}'), '--basetemp', '.pytest-mutation-case'], cwd=scratch, env=TEST_ENV, capture_output=True, text=True, timeout=25)
             status = 'killed' if run.returncode == 1 and 'failed' in run.stdout else ('survived' if run.returncode == 0 else 'error')
             results.append(dict(name=name, file=f'intentcart/{filename}', target=target, status=status, output=run.stdout))
             print(f'{name}: {status}', flush=True)

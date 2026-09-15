@@ -20,12 +20,14 @@ The live model chooses tools, searches and repairs. It can add inferred essentia
 
 `ask_user` exposes material model questions. `validate_plan` reports actual rule outcomes. The final success summary is generated from saved state; raw model prose is retained separately as unverified output. Provider-specific reasoning/signature fields may be forwarded in memory for protocol continuity but are not persisted.
 
+Long conversations use a bounded two-layer context. SQLite remains the authority for cart and constraint state. When more than eight conversation messages exist, `store.py` persists a host-derived reference for the older portion: its covered range, lightweight topics, selected normalized user excerpts, and a snapshot of verified constraints. The model receives that block as a labelled `user` message, never as system policy; the system prompt says it is untrusted and non-authoritative. No model-generated summary, model reasoning, or tool payload is retained in this layer. `/api/state` and the chat UI expose the reference so the user can inspect it, and session reset removes it.
+
 `demo` and `baseline` are non-LLM controls. Both use the same catalog, validator and deterministic selection policy. Demo permits three bounded recovery attempts; baseline makes one. Neither automatically handles every dependency. They are useful for UI and test infrastructure, not a substitute for real-model evaluation.
 
 ## Recovery, trust and limits
 
 Persisted product state survives a process restart; an in-flight model call does not. The active-run set is process-local, so multi-worker execution is unsupported. Browser cookies are anonymous access handles, not production user accounts. There are no production quotas, role management, distributed leases, live stock or real billing.
 
-No key is sent to the browser, trace or Git. No payment/tool escalation route exists in the model gateway. Product descriptions cannot alter schemas or server permissions. These boundaries reduce exposure; they do not constitute a general prompt-injection security proof.
+No key is sent to the browser, trace or Git. For local development, the server loads only an allowlist of documented `INTENTCART_*` entries from a Git-ignored root `.env`; process environment variables take precedence. Remote providers require HTTPS; the development-only HTTP exception accepts literal loopback IP addresses only. No payment/tool escalation route exists in the model gateway. Product descriptions cannot alter schemas or server permissions. These boundaries reduce exposure; they do not constitute a general prompt-injection security proof.
 
 Development Agent Continuity stays outside the checkout and is not required to run any of the above.
